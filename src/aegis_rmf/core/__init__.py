@@ -5,8 +5,10 @@ from aegis_rmf.core.enums import (
     AssessmentStatus,
     AssessmentType,
     LifecycleStage,
+    PolicyStatus,
     RiskCategory,
     RiskLevel,
+    RoleType,
     SystemType,
 )
 from aegis_rmf.core.models import (
@@ -24,8 +26,10 @@ __all__ = [
     "AssessmentType",
     "ComplianceArtifact",
     "LifecycleStage",
+    "PolicyStatus",
     "RiskCategory",
     "RiskLevel",
     "RiskProfile",
+    "RoleType",
     "SystemType",
 ]

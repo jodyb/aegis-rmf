@@ -68,3 +68,21 @@ class RiskCategory(str, Enum):
     TRANSPARENCY = "transparency"
     RELIABILITY = "reliability"
     ACCOUNTABILITY = "accountability"
+
+
+class PolicyStatus(str, Enum):
+    """Lifecycle state of a governance policy."""
+    DRAFT = "draft"
+    ACTIVE = "active"
+    UNDER_REVIEW = "under_review"
+    DEPRECATED = "deprecated"
+
+
+class RoleType(str, Enum):
+    """Standard governance roles for AI systems."""
+    SYSTEM_OWNER = "system_owner"
+    RISK_OFFICER = "risk_officer"
+    ETHICS_REVIEWER = "ethics_reviewer"
+    TECHNICAL_LEAD = "technical_lead"
+    DATA_STEWARD = "data_steward"
+    COMPLIANCE_OFFICER = "compliance_officer"
