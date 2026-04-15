@@ -4,7 +4,9 @@
 
 Aegis RMF is an open-source Python SDK for ML engineers and governance teams who need to operationalize AI risk management — not just read about it. It maps NIST AI RMF, ISO 42001, and the EU AI Act to concrete data models, assessments, and controls you can wire into CI/CD pipelines and monitoring systems.
 
-> **Status:** Pre-alpha — Phase 1 (NIST AI RMF foundation) in active development.
+![CI](https://github.com/jodyb/aegis-rmf/actions/workflows/ci.yml/badge.svg)
+
+> **Status:** Pre-alpha — Phase 1 (NIST AI RMF foundation) in active development. GOVERN function complete.
 
 ---
 
@@ -22,6 +24,46 @@ uv sync --extra dev
 
 # Run the test suite
 uv run pytest -v
+```
+
+### Evaluate governance policies against an AI system
+
+```python
+from aegis_rmf.core import LifecycleStage, PolicyStatus, RiskLevel, SystemType
+from aegis_rmf.core import AISystem
+from aegis_rmf.govern import GovernancePolicy, GovernService, PolicyCondition
+
+# Define a policy that targets high-risk production systems
+policy = GovernancePolicy(
+    name="High Risk Controls",
+    description="Extra controls required for high-risk production systems",
+    status=PolicyStatus.ACTIVE,
+    condition=PolicyCondition(
+        risk_levels=[RiskLevel.HIGH, RiskLevel.CRITICAL],
+        lifecycle_stages=[LifecycleStage.PRODUCTION],
+    ),
+    requirements=["Monthly risk assessment", "Human-in-the-loop review"],
+    owner="Risk Team",
+)
+
+# Register the policy with the service
+service = GovernService()
+service.add_policy(policy)
+
+# Check which policies apply to a given system
+system = AISystem(
+    name="Fraud Detector",
+    description="Flags suspicious transactions in real time",
+    system_type=SystemType.CLASSIFICATION,
+    owner="ML Platform Team",
+    lifecycle_stage=LifecycleStage.PRODUCTION,
+    risk_level=RiskLevel.HIGH,
+)
+
+applicable = service.get_applicable_policies(system)
+for p in applicable:
+    print(f"{p.name}: {p.requirements}")
+# High Risk Controls: ['Monthly risk assessment', 'Human-in-the-loop review']
 ```
 
 ### Register an AI system
@@ -93,9 +135,10 @@ The four subpackages (`govern`, `map`, `measure`, `manage`) mirror the four func
 
 ### Phase 1 — NIST AI RMF foundation *(current)*
 - [x] Project scaffold, packaging, CI tooling
+- [x] GitHub Actions CI — tests run on every push and PR
 - [x] Core domain models: `AISystem`, `RiskProfile`, `Assessment`, `ComplianceArtifact`
 - [x] Shared enumerations: risk levels, lifecycle stages, system types, risk categories
-- [ ] GOVERN function: policy registry, role assignments, accountability chains
+- [x] GOVERN function: policy registry, role assignments, accountability chains
 - [ ] MAP function: system context capture, stakeholder mapping, risk identification
 - [ ] MEASURE function: metric definitions, thresholds, scoring logic
 - [ ] MANAGE function: control catalog, mitigation actions, monitoring triggers
