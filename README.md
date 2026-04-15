@@ -6,13 +6,48 @@ Aegis RMF is an open-source Python SDK for ML engineers and governance teams who
 
 ![CI](https://github.com/jodyb/aegis-rmf/actions/workflows/ci.yml/badge.svg)
 
-> **Status:** Pre-alpha — Phase 1 (NIST AI RMF foundation) in active development. GOVERN function complete.
+> **Status:** Pre-alpha — Phase 1 (NIST AI RMF foundation) in active development. GOVERN and MAP functions complete.
 
 ---
 
 ## Why this exists
 
 Most AI governance tooling lives in spreadsheets, policy PDFs, and consultants' decks. Aegis RMF treats governance as code: versioned, testable, and integrated into the same engineering workflows teams already use. The goal is to make compliance a byproduct of good engineering practice, not a separate audit exercise.
+
+---
+
+## Context
+
+```mermaid
+flowchart LR
+    ML(["ML Engineer"])
+    GT(["Governance Team"])
+
+    subgraph aegis["aegis-rmf SDK"]
+        GOVERN["GOVERN\nPolicies · Roles\nAccountability"]
+        MAP_F["MAP\nSystem Context\nStakeholders · Risk ID"]
+        MEASURE["MEASURE\nMetrics · Thresholds\n— Phase 1, upcoming —"]
+        MANAGE["MANAGE\nControls · Mitigations\n— Phase 1, upcoming —"]
+    end
+
+    NIST["NIST AI RMF"]
+    ISO["ISO 42001\n— Phase 2 —"]
+    EU["EU AI Act\n— Phase 3 —"]
+    CICD["CI/CD Pipelines"]
+    AUDIT["Audit Storage"]
+    OBS["Monitoring Systems"]
+
+    ML -- "registers systems,\nruns assessments" --> aegis
+    GT -- "defines policies,\nassigns roles" --> aegis
+
+    aegis -- "implements" --> NIST
+    aegis -. "maps to" .-> ISO
+    aegis -. "maps to" .-> EU
+
+    aegis -- "pass/fail signals" --> CICD
+    aegis -- "compliance artifacts" --> AUDIT
+    aegis -- "risk metrics" --> OBS
+```
 
 ---
 
@@ -64,6 +99,77 @@ applicable = service.get_applicable_policies(system)
 for p in applicable:
     print(f"{p.name}: {p.requirements}")
 # High Risk Controls: ['Monthly risk assessment', 'Human-in-the-loop review']
+```
+
+### Map system context, stakeholders, and risks
+
+```python
+from aegis_rmf.core import (
+    AISystem,
+    DataSensitivity,
+    DeploymentEnvironment,
+    RiskCategory,
+    RiskLevel,
+    StakeholderType,
+    SystemType,
+)
+from aegis_rmf.map import DataSource, IdentifiedRisk, MapService, Stakeholder, SystemContext
+
+system = AISystem(
+    name="Fraud Detector",
+    description="Flags suspicious transactions in real time",
+    system_type=SystemType.CLASSIFICATION,
+    owner="ML Platform Team",
+)
+
+# Capture operational context — purpose, environment, and data sources
+context = SystemContext(
+    system_id=system.id,
+    purpose="Detect fraudulent payment transactions before they settle",
+    intended_use="Real-time scoring of payment events",
+    out_of_scope_uses=["Credit decisioning", "Know-your-customer checks"],
+    deployment_environment=DeploymentEnvironment.CLOUD_PUBLIC,
+    data_sources=[
+        DataSource(
+            name="Transaction history",
+            description="12 months of card transactions",
+            sensitivity=DataSensitivity.CONFIDENTIAL,
+            contains_pii=True,
+        )
+    ],
+    dependencies=["AWS Bedrock", "Internal feature store"],
+)
+
+# Map the stakeholders affected by this system
+stakeholder = Stakeholder(
+    system_id=system.id,
+    name="Cardholders",
+    stakeholder_type=StakeholderType.DATA_SUBJECT,
+    description="Individuals whose transactions are scored",
+    impact_description="May have legitimate transactions declined",
+)
+
+# Identify granular risks, then aggregate into a RiskProfile
+service = MapService()
+service.add_risk(IdentifiedRisk(
+    system_id=system.id,
+    category=RiskCategory.BIAS,
+    level=RiskLevel.HIGH,
+    title="Demographic skew in training data",
+    description="Lower precision for transactions in certain geographic regions",
+    affected_stakeholders=[stakeholder.id],
+))
+service.add_risk(IdentifiedRisk(
+    system_id=system.id,
+    category=RiskCategory.PRIVACY,
+    level=RiskLevel.MEDIUM,
+    title="PII in feature pipeline",
+    description="Raw card numbers passed through feature store",
+))
+
+profile = service.build_risk_profile(system.id, context="Pre-deployment MAP assessment")
+print(profile.overall_risk)   # RiskLevel.HIGH
+print(profile.risk_scores)    # {RiskCategory.BIAS: HIGH, RiskCategory.PRIVACY: MEDIUM}
 ```
 
 ### Register an AI system
@@ -139,7 +245,7 @@ The four subpackages (`govern`, `map`, `measure`, `manage`) mirror the four func
 - [x] Core domain models: `AISystem`, `RiskProfile`, `Assessment`, `ComplianceArtifact`
 - [x] Shared enumerations: risk levels, lifecycle stages, system types, risk categories
 - [x] GOVERN function: policy registry, role assignments, accountability chains
-- [ ] MAP function: system context capture, stakeholder mapping, risk identification
+- [x] MAP function: system context capture, stakeholder mapping, risk identification
 - [ ] MEASURE function: metric definitions, thresholds, scoring logic
 - [ ] MANAGE function: control catalog, mitigation actions, monitoring triggers
 - [ ] pytest suite with full coverage of Phase 1 modules

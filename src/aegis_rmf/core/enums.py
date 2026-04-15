@@ -86,3 +86,32 @@ class RoleType(str, Enum):
     TECHNICAL_LEAD = "technical_lead"
     DATA_STEWARD = "data_steward"
     COMPLIANCE_OFFICER = "compliance_officer"
+
+
+class StakeholderType(str, Enum):
+    """Categories of stakeholders affected by an AI system."""
+    INTERNAL_USER = "internal_user"
+    EXTERNAL_CUSTOMER = "external_customer"
+    DATA_SUBJECT = "data_subject"
+    REGULATOR = "regulator"
+    VULNERABLE_POPULATION = "vulnerable_population"
+    THIRD_PARTY = "third_party"
+    SOCIETY = "society"
+
+
+class DeploymentEnvironment(str, Enum):
+    """Where an AI system runs."""
+    ON_PREMISES = "on_premises"
+    CLOUD_PUBLIC = "cloud_public"
+    CLOUD_PRIVATE = "cloud_private"
+    HYBRID = "hybrid"
+    EDGE = "edge"
+
+
+class DataSensitivity(str, Enum):
+    """Sensitivity classification for data the system uses."""
+    PUBLIC = "public"
+    INTERNAL = "internal"
+    CONFIDENTIAL = "confidential"
+    RESTRICTED = "restricted"
+    REGULATED = "regulated"
