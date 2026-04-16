@@ -6,7 +6,7 @@ Aegis RMF is an open-source Python SDK for ML engineers and governance teams who
 
 ![CI](https://github.com/jodyb/aegis-rmf/actions/workflows/ci.yml/badge.svg)
 
-> **Status:** Pre-alpha — Phase 1 (NIST AI RMF foundation) in active development. GOVERN and MAP functions complete.
+> **Status:** Pre-alpha — Phase 1 (NIST AI RMF foundation) in active development. GOVERN, MAP, MEASURE, and MANAGE functions complete.
 
 ---
 
@@ -26,16 +26,16 @@ flowchart LR
     subgraph aegis["aegis-rmf SDK"]
         GOVERN["GOVERN\nPolicies · Roles\nAccountability"]
         MAP_F["MAP\nSystem Context\nStakeholders · Risk ID"]
-        MEASURE["MEASURE\nMetrics · Thresholds\n— Phase 1, upcoming —"]
-        MANAGE["MANAGE\nControls · Mitigations\n— Phase 1, upcoming —"]
+        MEASURE["MEASURE\nMetrics · Thresholds\nEvaluation Scoring"]
+        MANAGE["MANAGE\nControls · Mitigations\nMonitoring Triggers"]
     end
 
     NIST["NIST AI RMF"]
     ISO["ISO 42001\n— Phase 2 —"]
     EU["EU AI Act\n— Phase 3 —"]
-    CICD["CI/CD Pipelines"]
-    AUDIT["Audit Storage"]
-    OBS["Monitoring Systems"]
+    CICD["GitHub Actions\n/ AWS CodePipeline"]
+    AUDIT["Amazon S3"]
+    OBS["Amazon CloudWatch"]
 
     ML -- "registers systems,\nruns assessments" --> aegis
     GT -- "defines policies,\nassigns roles" --> aegis
@@ -172,6 +172,88 @@ print(profile.overall_risk)   # RiskLevel.HIGH
 print(profile.risk_scores)    # {RiskCategory.BIAS: HIGH, RiskCategory.PRIVACY: MEDIUM}
 ```
 
+### Manage risks with controls, actions, and monitoring triggers
+
+```python
+from datetime import datetime
+
+from aegis_rmf.core import (
+    ActionStatus,
+    ControlStatus,
+    EvaluationResult,
+    RiskCategory,
+    RiskLevel,
+    SystemType,
+)
+from aegis_rmf.core import AISystem
+from aegis_rmf.map import IdentifiedRisk
+from aegis_rmf.manage import Control, ManageService, MitigationAction, MonitoringTrigger
+from aegis_rmf.measure import Metric, MetricType
+
+system = AISystem(
+    name="Fraud Detector",
+    description="Flags suspicious transactions in real time",
+    system_type=SystemType.CLASSIFICATION,
+    owner="ML Platform Team",
+)
+
+# Register a control that addresses bias risk
+control = Control(
+    system_id=system.id,
+    name="Demographic parity constraint",
+    description="Post-hoc fairness calibration applied at inference time",
+    status=ControlStatus.ACTIVE,
+    categories=[RiskCategory.BIAS],
+)
+
+# A high-severity bias risk from the MAP function
+risk = IdentifiedRisk(
+    system_id=system.id,
+    category=RiskCategory.BIAS,
+    level=RiskLevel.HIGH,
+    title="Demographic skew in training data",
+    description="Lower precision for transactions in certain geographic regions",
+)
+
+service = ManageService()
+service.register_control(control)
+
+# Derive priority from risk level, then open a mitigation action
+service.add_action(MitigationAction(
+    system_id=system.id,
+    risk_id=risk.id,
+    control_id=control.id,
+    title="Deploy fairness calibration to prod",
+    priority=ManageService.priority_for_risk_level(risk.level),  # → SHORT_TERM
+    assignee="ml-platform@example.com",
+    due_date=datetime(2026, 5, 1),
+    description="Apply post-processing calibration step in SageMaker pipeline",
+))
+
+# Add a monitoring trigger — fire when the bias metric hits WARNING or worse
+bias_metric = Metric(
+    name="Demographic parity ratio",
+    description="Ratio of positive prediction rates across demographic groups",
+    metric_type=MetricType.FAIRNESS,
+    unit="ratio",
+)
+service.add_trigger(MonitoringTrigger(
+    system_id=system.id,
+    metric_id=bias_metric.id,
+    minimum_result=EvaluationResult.WARNING,
+    action_description="Open a P1 incident and notify the risk officer",
+    assignee="risk-officer@example.com",
+))
+
+# Check which risks still lack an active treatment decision (NIST Manage 4)
+unaddressed = service.get_unaddressed_risks(system.id, [risk.id])
+print(unaddressed)  # [] — the OPEN action covers it
+
+# Evaluate triggers against current measurement results
+fired = service.fire_triggers(system.id, {bias_metric.id: EvaluationResult.FAIL})
+print(len(fired))   # 1 — FAIL >= WARNING minimum threshold
+```
+
 ### Register an AI system
 
 ```python
@@ -246,9 +328,9 @@ The four subpackages (`govern`, `map`, `measure`, `manage`) mirror the four func
 - [x] Shared enumerations: risk levels, lifecycle stages, system types, risk categories
 - [x] GOVERN function: policy registry, role assignments, accountability chains
 - [x] MAP function: system context capture, stakeholder mapping, risk identification
-- [ ] MEASURE function: metric definitions, thresholds, scoring logic
-- [ ] MANAGE function: control catalog, mitigation actions, monitoring triggers
-- [ ] pytest suite with full coverage of Phase 1 modules
+- [x] MEASURE function: metric definitions, thresholds, scoring logic
+- [x] MANAGE function: control catalog, mitigation actions, monitoring triggers
+- [x] pytest suite with full coverage of Phase 1 modules
 
 ### Phase 2 — ISO 42001 mapping
 - [ ] ISO 42001 control catalog
@@ -273,7 +355,7 @@ The four subpackages (`govern`, `map`, `measure`, `manage`) mirror the four func
 
 ### Phase 6 — Polish and launch
 - [ ] Documentation site
-- [ ] Example integrations (Bedrock, Vertex AI, OpenAI)
+- [ ] AWS integrations: Bedrock model governance, CloudWatch metric export, S3 artifact storage
 - [ ] v1.0.0 release
 
 ---

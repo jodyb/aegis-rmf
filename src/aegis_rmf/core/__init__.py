@@ -1,18 +1,24 @@
 """Core domain models and enumerations for Aegis RMF."""
 
 from aegis_rmf.core.enums import (
+    ActionPriority,
+    ActionStatus,
     ArtifactType,
     AssessmentStatus,
     AssessmentType,
+    ControlStatus,
     DataSensitivity,
     DeploymentEnvironment,
+    EvaluationResult,
     LifecycleStage,
+    MetricType,
     PolicyStatus,
     RiskCategory,
     RiskLevel,
     RoleType,
     StakeholderType,
     SystemType,
+    ThresholdOperator,
 )
 from aegis_rmf.core.models import (
     AISystem,
@@ -23,14 +29,19 @@ from aegis_rmf.core.models import (
 
 __all__ = [
     "AISystem",
+    "ActionPriority",
+    "ActionStatus",
     "ArtifactType",
     "Assessment",
     "AssessmentStatus",
     "AssessmentType",
     "ComplianceArtifact",
+    "ControlStatus",
     "DataSensitivity",
     "DeploymentEnvironment",
+    "EvaluationResult",
     "LifecycleStage",
+    "MetricType",
     "PolicyStatus",
     "RiskCategory",
     "RiskLevel",
@@ -38,4 +49,5 @@ __all__ = [
     "RoleType",
     "StakeholderType",
     "SystemType",
+    "ThresholdOperator",
 ]

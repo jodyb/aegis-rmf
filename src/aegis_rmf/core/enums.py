@@ -115,3 +115,57 @@ class DataSensitivity(str, Enum):
     CONFIDENTIAL = "confidential"
     RESTRICTED = "restricted"
     REGULATED = "regulated"
+
+
+class MetricType(str, Enum):
+    """Categories of metrics tracked for AI systems."""
+    PERFORMANCE = "performance"        # accuracy, precision, recall
+    FAIRNESS = "fairness"              # bias, demographic parity
+    SAFETY = "safety"                  # harmful output rate, jailbreak resistance
+    RELIABILITY = "reliability"        # uptime, error rate
+    OPERATIONAL = "operational"        # latency, throughput, cost
+    PRIVACY = "privacy"                # PII leakage rate
+    ROBUSTNESS = "robustness"          # adversarial resistance
+    QUALITY = "quality"                # hallucination rate, factuality
+
+
+class ThresholdOperator(str, Enum):
+    """How a measurement is compared to a threshold value."""
+    LESS_THAN = "lt"
+    LESS_THAN_OR_EQUAL = "lte"
+    GREATER_THAN = "gt"
+    GREATER_THAN_OR_EQUAL = "gte"
+    EQUALS = "eq"
+    BETWEEN = "between"
+
+
+class EvaluationResult(str, Enum):
+    """Outcome of evaluating a measurement against a threshold."""
+    PASS = "pass"
+    WARNING = "warning"
+    FAIL = "fail"
+
+
+class ControlStatus(str, Enum):
+    """Lifecycle state of a risk control."""
+    PLANNED = "planned"
+    ACTIVE = "active"
+    UNDER_REVIEW = "under_review"
+    DEPRECATED = "deprecated"
+
+
+class ActionStatus(str, Enum):
+    """State of a mitigation action task."""
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+    ACCEPTED = "accepted"        # risk formally accepted, not mitigated
+    TRANSFERRED = "transferred"  # risk transferred to a third party or insurer
+
+
+class ActionPriority(str, Enum):
+    """Urgency classification for a mitigation action."""
+    IMMEDIATE = "immediate"
+    SHORT_TERM = "short_term"
+    MEDIUM_TERM = "medium_term"
+    LONG_TERM = "long_term"
